@@ -1,42 +1,29 @@
-name: Build & Release APK
+name: Check Project Structure
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
 
 jobs:
-  build:
+  check:
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout source
       uses: actions/checkout@v4
 
-    - name: Setup Java 17
-      uses: actions/setup-java@v4
-      with:
-        distribution: 'temurin'
-        java-version: '17'
-
-    - name: Install Android SDK
-      uses: android-actions/setup-android@v3
-
-    - name: Install Gradle
+    - name: Show project structure
       run: |
-        sudo apt-get update
-        sudo apt-get install -y gradle
-
-    - name: Build Debug APK
-      run: |
-        gradle assembleDebug
-
-    - name: Upload APK to Release
-      uses: softprops/action-gh-release@v2
-      with:
-        tag_name: v1.${{ github.run_number }}
-        name: "Android APK v1.${{ github.run_number }}"
-        files: app/build/outputs/apk/debug/*.apk
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        echo "=== Root files ==="
+        ls -la
+        
+        echo ""
+        echo "=== All gradle files ==="
+        find . -name "*.gradle" -o -name "*.gradle.kts"
+        
+        echo ""
+        echo "=== settings.gradle content ==="
+        cat settings.gradle 2>/dev/null || cat settings.gradle.kts 2>/dev/null || echo "Not found"
+        
+        echo ""
+        echo "=== Available Gradle tasks ==="
+        gradle tasks --all | grep -i assemble || echo "No assemble tasks"
